@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kalkulator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Share Tech Mono', monospace;
+    background-image: 
+      radial-gradient(ellipse at 20% 20%, #16213e 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, #0f3460 0%, transparent 50%);
+  }
+
+  .calculator {
+    width: 360px;
+    background: linear-gradient(160deg, #2d2d44 0%, #1e1e30 60%, #16162a 100%);
+    border-radius: 18px 18px 22px 22px;
+    padding: 18px 16px 20px;
+    box-shadow:
+      0 0 0 2px #3a3a5c,
+      0 0 0 4px #111,
+      0 20px 60px rgba(0,0,0,0.7),
+      inset 0 1px 0 rgba(255,255,255,0.07);
+    position: relative;
+  }
+
+  .brand-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 0 4px;
+  }
+
+  .brand {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #7799cc;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .model {
+    font-size: 10px;
+    color: #445577;
+    letter-spacing: 2px;
+  }
+
+  /* SCREEN */
+  .screen-shell {
+    background: #0a0a12;
+    border-radius: 6px;
+    padding: 3px;
+    margin-bottom: 14px;
+    box-shadow:
+      inset 0 2px 8px rgba(0,0,0,0.8),
+      0 1px 0 rgba(255,255,255,0.05);
+    border: 1px solid #222;
+  }
+
+  .screen {
+    background: #c8d8a8;
+    background-image: 
+      linear-gradient(180deg, #ccdba8 0%, #b8cc90 100%);
+    border-radius: 4px;
+    padding: 8px 10px;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  .screen::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 30%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 100%);
+    pointer-events: none;
+    border-radius: 4px 4px 0 0;
+  }
+
+  .history-area {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 90px;
+    margin-bottom: 4px;
+    scrollbar-width: none;
+  }
+  .history-area::-webkit-scrollbar { display: none; }
+
+  .history-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2px;
+    opacity: 0.6;
+    font-size: 12px;
+    color: #2a3a1a;
+    line-height: 1.3;
+  }
+
+  .history-entry .expr {
+    flex: 1;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11px;
+  }
+
+  .history-entry .res {
+    margin-left: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    white-space: nowrap;
+  }
+
+  .history-entry:last-of-type {
+    opacity: 0.85;
+  }
+
+  .current-expr {
+    font-size: 13px;
+    color: #1a2a0a;
+    text-align: right;
+    min-height: 16px;
+    word-break: break-all;
+    line-height: 1.3;
+  }
+
+  .current-display {
+    font-size: 28px;
+    color: #0a1a00;
+    text-align: right;
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+    word-break: break-all;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: #0a1a00;
+    vertical-align: text-bottom;
+    animation: blink 1s step-end infinite;
+    margin-left: 1px;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* MODE INDICATOR */
+  .mode-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 2px;
+  }
+  .mode-tag {
+    font-size: 9px;
+    color: #3a5a2a;
+    background: rgba(0,0,0,0.1);
+    padding: 1px 4px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+  }
+  .mode-tag.active {
+    color: #1a3a0a;
+    background: rgba(0,0,0,0.2);
+  }
+
+  /* BUTTON GRID */
+  .btn-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+  }
+
+  button {
+    font-family: 'Share Tech Mono', monospace;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 13px;
+    transition: all 0.08s ease;
+    position: relative;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  /* Button sizes */
+  .btn-sm { width: 48px; height: 36px; }
+  .btn-md { width: 62px; height: 36px; }
+  .btn-wide { width: 102px; height: 36px; }
+
+  /* Function buttons (top rows) */
+  .btn-fn {
+    background: linear-gradient(180deg, #3d3d58 0%, #2e2e46 100%);
+    color: #99bbdd;
+    font-size: 11px;
+    border-bottom: 2px solid #1a1a2e;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  }
+  .btn-fn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    background: linear-gradient(180deg, #2e2e46 0%, #3d3d58 100%);
+  }
+  .btn-fn span.sub {
+    display: block;
+    font-size: 8px;
+    color: #6688aa;
+    letter-spacing: 0.5px;
+  }
+
+  /* Operator buttons */
+  .btn-op {
+    background: linear-gradient(180deg, #2a4a6a 0%, #1e3854 100%);
+    color: #88ccff;
+    font-size: 16px;
+    font-weight: bold;
+    border-bottom: 2px solid #0e1e30;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  }
+  .btn-op:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    background: linear-gradient(180deg, #1e3854 0%, #2a4a6a 100%);
+  }
+
+  /* Number buttons */
+  .btn-num {
+    background: linear-gradient(180deg, #424258 0%, #333348 100%);
+    color: #ddeeff;
+    font-size: 16px;
+    border-bottom: 2px solid #1e1e2e;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  }
+  .btn-num:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    background: linear-gradient(180deg, #333348 0%, #424258 100%);
+  }
+
+  /* Equals button */
+  .btn-eq {
+    background: linear-gradient(180deg, #1a6a3a 0%, #124e2a 100%);
+    color: #88ffaa;
+    font-size: 20px;
+    font-weight: bold;
+    border-bottom: 2px solid #0a2e18;
+    box-shadow: 0 2px 6px rgba(0,100,50,0.3);
+  }
+  .btn-eq:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px rgba(0,100,50,0.3);
+    background: linear-gradient(180deg, #124e2a 0%, #1a6a3a 100%);
+  }
+
+  /* Clear button */
+  .btn-clear {
+    background: linear-gradient(180deg, #6a1a1a 0%, #4e1212 100%);
+    color: #ffaaaa;
+    font-size: 13px;
+    font-weight: bold;
+    border-bottom: 2px solid #2e0a0a;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  }
+  .btn-clear:active {
+    transform: translateY(1px);
+    background: linear-gradient(180deg, #4e1212 0%, #6a1a1a 100%);
+  }
+
+  /* DEL button */
+  .btn-del {
+    background: linear-gradient(180deg, #4a3a1a 0%, #382a10 100%);
+    color: #ffddaa;
+    font-size: 12px;
+    border-bottom: 2px solid #1e1408;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  }
+  .btn-del:active {
+    transform: translateY(1px);
+    background: linear-gradient(180deg, #382a10 0%, #4a3a1a 100%);
+  }
+
+  /* Shift indicator */
+  .shift-on { 
+    box-shadow: 0 0 8px rgba(255,220,100,0.4), 0 2px 4px rgba(0,0,0,0.4) !important;
+    color: #ffdd66 !important;
+  }
+
+  .error-flash {
+    animation: errflash 0.3s ease;
+  }
+  @keyframes errflash {
+    0% { background: #c8d8a8; }
+    50% { background: #e8b0b0; }
+    100% { background: #c8d8a8; }
+  }
+
+  .bottom-strip {
+    display: flex;
+    justify-content: center;
+    margin-top: 14px;
+    gap: 4px;
+  }
+  .strip-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: #2a2a3e;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.5);
+  }
+</style>
+</head>
+<body>
+<div class="calculator">
+  <div class="brand-bar">
+    <span class="brand">CASIO</span>
+    <span class="model">fx-991 WEB</span>
+  </div>
+
+  <div class="screen-shell">
+    <div class="screen" id="screen">
+      <div>
+        <div class="mode-row">
+          <span class="mode-tag active" id="mode-deg">DEG</span>
+          <span class="mode-tag" id="mode-rad">RAD</span>
+        </div>
+        <div class="history-area" id="history"></div>
+      </div>
+      <div>
+        <div class="current-expr" id="expr-display"></div>
+        <div class="current-display" id="main-display">0<span class="cursor"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-grid">
+    <!-- Row 1: shift, alpha, mode, setup -->
+    <div class="btn-row">
+      <button class="btn-fn btn-sm" id="btn-shift" onclick="toggleShift()">SHIFT</button>
+      <button class="btn-fn btn-sm" onclick="toggleAngle()">DRG▸</button>
+      <button class="btn-fn btn-sm" onclick="inputFn('Math.abs(','|x|')">|x|</button>
+      <button class="btn-fn btn-sm" onclick="inputFn('Math.floor(','⌊')">⌊x⌋</button>
+      <button class="btn-fn btn-sm" onclick="addHistory()">RCL</button>
+    </div>
+
+    <!-- Row 2: trig -->
+    <div class="btn-row">
+      <button class="btn-fn btn-sm" id="btn-sin" onclick="inputTrig('sin')">sin<span class="sub" id="sub-sin"></span></button>
+      <button class="btn-fn btn-sm" id="btn-cos" onclick="inputTrig('cos')">cos<span class="sub" id="sub-cos"></span></button>
+      <button class="btn-fn btn-sm" id="btn-tan" onclick="inputTrig('tan')">tan<span class="sub" id="sub-tan"></span></button>
+      <button class="btn-fn btn-sm" onclick="inputFn('Math.log(','log')">log</button>
+      <button class="btn-fn btn-sm" onclick="inputFn('Math.log2(','log₂')">log₂</button>
+    </div>
+
+    <!-- Row 3: powers, roots -->
+    <div class="btn-row">
+      <button class="btn-fn btn-sm" onclick="inputFn('Math.sqrt(','√')">√</button>
+      <button class="btn-fn btn-sm" onclick="inputFn('Math.cbrt(','∛')">∛</button>
+      <button class="btn-fn btn-sm" onclick="inputFn('Math.exp(','eˣ')">eˣ</button>
+      <button class="btn-fn btn-sm" onclick="inputText('^','²')">x²</button>
+      <button class="btn-fn btn-sm" onclick="inputText('^','ˣ')">xʸ</button>
+    </div>
+
+    <!-- Row 4: parens, percent, pi, e -->
+    <div class="btn-row">
+      <button class="btn-fn btn-sm" onclick="inputText('(','(')">( )</button>
+      <button class="btn-fn btn-sm" onclick="inputText(')',')')">)</button>
+      <button class="btn-fn btn-sm" onclick="inputText('Math.PI','π')">π</button>
+      <button class="btn-fn btn-sm" onclick="inputText('Math.E','e')">e</button>
+      <button class="btn-fn btn-sm" onclick="inputText('/100','%')">%</button>
+    </div>
+
+    <!-- Row 5: AC, DEL, div -->
+    <div class="btn-row">
+      <button class="btn-clear btn-sm" onclick="allClear()">AC</button>
+      <button class="btn-del btn-sm" onclick="delChar()">DEL</button>
+      <button class="btn-fn btn-sm" onclick="inputText('**','ⁿ√')">ⁿ√</button>
+      <button class="btn-op btn-sm" onclick="inputText('*10**','E')">EXP</button>
+      <button class="btn-op btn-sm" onclick="inputText('/','÷')">÷</button>
+    </div>
+
+    <!-- Row 6: 7 8 9 × -->
+    <div class="btn-row">
+      <button class="btn-num btn-sm" onclick="inputText('7','7')">7</button>
+      <button class="btn-num btn-sm" onclick="inputText('8','8')">8</button>
+      <button class="btn-num btn-sm" onclick="inputText('9','9')">9</button>
+      <button class="btn-del btn-sm" onclick="inputText('(','(')">( </button>
+      <button class="btn-op btn-sm" onclick="inputText('*','×')">×</button>
+    </div>
+
+    <!-- Row 7: 4 5 6 - -->
+    <div class="btn-row">
+      <button class="btn-num btn-sm" onclick="inputText('4','4')">4</button>
+      <button class="btn-num btn-sm" onclick="inputText('5','5')">5</button>
+      <button class="btn-num btn-sm" onclick="inputText('6','6')">6</button>
+      <button class="btn-del btn-sm" onclick="inputText(')',')')"> )</button>
+      <button class="btn-op btn-sm" onclick="inputText('-','-')">−</button>
+    </div>
+
+    <!-- Row 8: 1 2 3 + -->
+    <div class="btn-row">
+      <button class="btn-num btn-sm" onclick="inputText('1','1')">1</button>
+      <button class="btn-num btn-sm" onclick="inputText('2','2')">2</button>
+      <button class="btn-num btn-sm" onclick="inputText('3','3')">3</button>
+      <button class="btn-fn btn-sm" onclick="inputText('1/','1/')">1/x</button>
+      <button class="btn-op btn-sm" onclick="inputText('+','+')">+</button>
+    </div>
+
+    <!-- Row 9: 0 . ANS = -->
+    <div class="btn-row">
+      <button class="btn-num btn-sm" onclick="inputText('0','0')">0</button>
+      <button class="btn-num btn-sm" onclick="inputText('.','.')">.</button>
+      <button class="btn-fn btn-sm" onclick="inputAns()">ANS</button>
+      <button class="btn-fn btn-sm" onclick="toggleSign()">+/−</button>
+      <button class="btn-eq btn-sm" onclick="calculate()">=</button>
+    </div>
+  </div>
+
+  <div class="bottom-strip">
+    <div class="strip-dot"></div><div class="strip-dot"></div><div class="strip-dot"></div>
+    <div class="strip-dot"></div><div class="strip-dot"></div>
+  </div>
+</div>
+
+<script>
+let expr = '';      // raw JS expression
+let display = '';   // display string
+let history = [];
+let lastResult = null;
+let angleMode = 'DEG'; // DEG or RAD
+let shiftOn = false;
+let justCalc = false;
+
+function updateScreen() {
+  const md = document.getElementById('main-display');
+  const ed = document.getElementById('expr-display');
+  md.innerHTML = (display || '0') + '<span class="cursor"></span>';
+  ed.textContent = '';
+}
+
+function inputText(raw, shown) {
+  if (justCalc && /^[\d.π e]/.test(shown)) {
+    expr = ''; display = ''; 
+  }
+  justCalc = false;
+  expr += raw;
+  display += shown;
+  updateScreen();
+}
+
+function inputFn(fn, shown) {
+  if (justCalc) { expr = ''; display = ''; }
+  justCalc = false;
+  expr += fn;
+  display += shown + '(';
+  updateScreen();
+}
+
+function inputTrig(fn) {
+  if (justCalc) { expr = ''; display = ''; }
+  justCalc = false;
+  if (shiftOn) {
+    // inverse trig
+    const inv = fn === 'sin' ? 'asin' : fn === 'cos' ? 'acos' : 'atan';
+    const shown = fn + '⁻¹(';
+    if (angleMode === 'DEG') {
+      expr += `(180/Math.PI)*Math.${inv}(`;
+    } else {
+      expr += `Math.${inv}(`;
+    }
+    display += shown;
+    shiftOn = false;
+    document.getElementById('btn-shift').classList.remove('shift-on');
+    updateSubLabels();
+  } else {
+    if (angleMode === 'DEG') {
+      expr += `Math.${fn}(Math.PI/180*(`;
+      display += fn + '(';
+      // we'll need to close the extra paren, handle in evaluate
+    } else {
+      expr += `Math.${fn}(`;
+      display += fn + '(';
+    }
+  }
+  updateScreen();
+}
+
+function inputAns() {
+  if (lastResult !== null) {
+    expr += lastResult.toString();
+    display += 'Ans';
+    justCalc = false;
+    updateScreen();
+  }
+}
+
+function toggleSign() {
+  if (display.startsWith('-')) {
+    expr = expr.slice(1);
+    display = display.slice(1);
+  } else {
+    expr = '-' + expr;
+    display = '-' + display;
+  }
+  updateScreen();
+}
+
+function delChar() {
+  if (display.length === 0) return;
+  // Remove last char from display
+  display = display.slice(0, -1);
+  // For expr, rough approach: remove trailing chars
+  expr = expr.slice(0, -1);
+  updateScreen();
+}
+
+function allClear() {
+  expr = ''; display = '';
+  justCalc = false;
+  updateScreen();
+}
+
+function toggleShift() {
+  shiftOn = !shiftOn;
+  const btn = document.getElementById('btn-shift');
+  btn.classList.toggle('shift-on', shiftOn);
+  updateSubLabels();
+}
+
+function updateSubLabels() {
+  ['sin','cos','tan'].forEach(fn => {
+    const el = document.getElementById('sub-' + fn);
+    if (el) el.textContent = shiftOn ? '⁻¹' : '';
+  });
+}
+
+function toggleAngle() {
+  angleMode = angleMode === 'DEG' ? 'RAD' : 'DEG';
+  document.getElementById('mode-deg').classList.toggle('active', angleMode === 'DEG');
+  document.getElementById('mode-rad').classList.toggle('active', angleMode === 'RAD');
+}
+
+function buildExpr() {
+  // Auto-balance parentheses
+  let e = expr;
+  const open = (e.match(/\(/g) || []).length;
+  const close = (e.match(/\)/g) || []).length;
+  if (open > close) e += ')'.repeat(open - close);
+
+  // Handle trig DEG mode: close the extra paren we opened
+  // Already handled inline — each sin/cos/tan in DEG mode adds extra paren
+  return e;
+}
+
+function calculate() {
+  if (!expr) return;
+  const exprToEval = buildExpr();
+  const dispShown = display;
+  
+  try {
+    // Safe eval
+    const result = Function('"use strict"; return (' + exprToEval + ')')();
+    if (!isFinite(result)) throw new Error('Math Error');
+    
+    const formatted = formatResult(result);
+    
+    history.push({ expr: dispShown, result: formatted });
+    if (history.length > 10) history.shift();
+    renderHistory();
+    
+    lastResult = result;
+    expr = result.toString();
+    display = formatted;
+    justCalc = true;
+    updateScreen();
+  } catch(e) {
+    flashError();
+    const md = document.getElementById('main-display');
+    md.innerHTML = 'Math ERROR<span class="cursor"></span>';
+    setTimeout(() => { updateScreen(); }, 1500);
+    expr = ''; display = '';
+  }
+}
+
+function formatResult(n) {
+  if (Number.isInteger(n) && Math.abs(n) < 1e12) return n.toString();
+  const s = parseFloat(n.toPrecision(10)).toString();
+  // If too long, use exponential
+  if (s.length > 12) return n.toExponential(6);
+  return s;
+}
+
+function renderHistory() {
+  const el = document.getElementById('history');
+  el.innerHTML = '';
+  history.forEach(h => {
+    const div = document.createElement('div');
+    div.className = 'history-entry';
+    div.innerHTML = `<span class="expr">${h.expr}</span><span class="res">= ${h.result}</span>`;
+    el.appendChild(div);
+  });
+  el.scrollTop = el.scrollHeight;
+}
+
+function addHistory() {
+  // RCL: insert last result
+  inputAns();
+}
+
+function flashError() {
+  document.getElementById('screen').classList.add('error-flash');
+  setTimeout(() => document.getElementById('screen').classList.remove('error-flash'), 300);
+}
+
+// Keyboard support
+document.addEventListener('keydown', e => {
+  if (e.key >= '0' && e.key <= '9') inputText(e.key, e.key);
+  else if (e.key === '+') inputText('+','+');
+  else if (e.key === '-') inputText('-','-');
+  else if (e.key === '*') inputText('*','×');
+  else if (e.key === '/') { e.preventDefault(); inputText('/','÷'); }
+  else if (e.key === '.') inputText('.','.');
+  else if (e.key === '(') inputText('(','(');
+  else if (e.key === ')') inputText(')',')')
+  else if (e.key === 'Enter' || e.key === '=') calculate();
+  else if (e.key === 'Backspace') delChar();
+  else if (e.key === 'Escape') allClear();
+  else if (e.key === '^') inputText('^','ˣ');
+});
+
+updateScreen();
+</script>
+</body>
+</html>
